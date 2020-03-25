@@ -34,6 +34,7 @@ def printHand(hands=None, hand=None, player=None):
         hand = hands[player]
     for card in hand:
         print(card)
+    print("Card count: ", len(hand))
 
 def printHands(hands):
     for hand, player in hands:
@@ -80,15 +81,20 @@ def extendedPoints(hands, player, suit=None):
                 points += counts[countSuit] - LONG_THRESHOLD
     printPoints("Extended points ", points, suit=suit)
 
+def sortValue(elem):
+    return elem['valueWithSuitOffset']
+
 def sortCards(hands, player):
     # TODO: check out pythons in built sorting algos
     # TODO: have different sort options, now just ascending
     hand = hands[player]
-    sortedHand = []
     for card in hand:
-        card['valueWithSuitOffset'] = # SUITS.indexOf(card['suit']) * 100 + card['value']
+        card['valueWithSuitOffset'] = SUITS.index(card['suit']) * 100 + card['value']
     # TODO: for the sake of exercise, evaluate different sorting algorithms, implement a few here.
-    return sortedHand
+    hand.sort(key=sortValue)
+    for s in hand:
+        del s['valueWithSuitOffset']
+    return hand
 
 def main():
     hands = deal()
