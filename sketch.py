@@ -3,10 +3,12 @@ import random
 SUITS = ["clubs", "diamonds", "hearts", "spades"]
 VALUES_DISPLAY = ["Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Jack", "Queen", "King", "Ace"]
 VALUE_OFFSET = 2 # how much you need to add to the display index to get the point value of the relevant card
-PLAYERS = ['Liza', 'Dad', 'Dummy', 'Helen']
+PLAYERS = ['Alex', 'Bob', 'Cara', 'Dummy']
 VALUE_THRESHOLD = 10 # humans only bother counting Jacks and higher when evaluating hands
 SHORT_THRESHOLD = 3 # anything lower than this is a 'short' run in a suit
 LONG_THRESHOLD = 4 # anything above this is a 'long' run in a suit
+BID_LEVELS = ["One", "Two", "Three", "Four", "Five", "Six", "Seven"]
+BID_DENOMINATIONS = ["club", "diamond", "heart", "spade", "no trump"]
 
 def deal():
     deck = []
@@ -28,28 +30,24 @@ def deal():
             c+=1
     return hands
 
-def printHand(hands=None, hand=None, player=None):
+def printHand(hand, player=None):
     print(player)
-    if not hand:
-        hand = hands[player]
     for card in hand:
         print(card)
-    print("Card count: ", len(hand))
 
 def printHands(hands):
-    for hand, player in hands:
-        printHand(hand=hand, player=player)
+    for player, hand in hands.items():
+        printHand(hand, player=player)
 
 def printPoints(message, points, suit=None):
     if suit:
         message += "for "+suit+" "
     else:
         message += "in total "
-    print(message, points)
+    print(message + str(points))
 
 # points from cards
-def straightPoints(hands, player, suit=None):
-    hand = hands[player]
+def highCardPoints(hand, suit=None):
     points = 0
     for card in hand:
         # optionally only count points in one suit
@@ -60,9 +58,8 @@ def straightPoints(hands, player, suit=None):
     return points
 
 # points from cards and long/shorts
-def extendedPoints(hands, player, suit=None):
-    points = straightPoints(hands, player, suit=suit)
-    hand = hands[player]
+def hcpAndDistributionPoints(hand, suit=None):
+    points = highCardPoints(hand, suit=suit)
     counts = {}
     for card in hand:
         # optionally only count points in one suit
@@ -96,13 +93,44 @@ def sortCards(hands, player):
         del s['valueWithSuitOffset']
     return hand
 
+def handProfile(hand):
+    profile = {}
+    for suit in SUITS:
+        profile[suit] = {
+            'points': 0,
+            'count': 0
+        }
+    for card in hand:
+        suit = card['suit']
+        if card['value'] > VALUE_THRESHOLD:
+            profile[suit]['points'] += card['value'] - VALUE_THRESHOLD
+        profile[suit]['count'] += 1
+    return profile
+
+def makeOpeningBid(hand):
+    profile = handProfile(hand)
+    printHand(hand)
+    print(profile)
+    points = highCardPoints(hand)
+    if points > 12:
+        mostPoints = 0
+        for suit in SUITS:
+            suitPoints = profile[suit]['points']
+            if suitPoints > mostPoints:
+                mostPoints = suitPoints
+                strongestSuit = suit
+        return "1 "+strongestSuit
+    else:
+        return "No bid"
+
 def main():
     hands = deal()
     for player in PLAYERS:
         hands[player] = sortCards(hands, player)
-    printHand(hands=hands, player='Liza')
-    extendedPoints(hands, 'Liza')
-    extendedPoints(hands, 'Liza', suit='spades')
+    for player, hand in hands.items():
+        print("***"+player+"***")
+        bid = makeOpeningBid(hand)
+        print(player + " bids " + bid)
 
 main()
 # Ideas for tests
